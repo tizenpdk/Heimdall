@@ -75,6 +75,16 @@ enum
 	kFileTransferSequenceTimeoutDefault = 30000 // 30 seconds
 };
 
+void BridgeManager::SetUsbBus(int usbbus)
+{
+	this->usbbus = usbbus;
+}
+
+void BridgeManager::SetUsbDevAddr(int usbdevaddr)
+{
+	this->usbdevaddr = usbdevaddr;
+}
+
 int BridgeManager::FindDeviceInterface(void)
 {
 	Interface::Print("Detecting device...\n");
@@ -85,15 +95,21 @@ int BridgeManager::FindDeviceInterface(void)
 	for (int deviceIndex = 0; deviceIndex < deviceCount; deviceIndex++)
 	{
 		libusb_device_descriptor descriptor;
+		uint8_t bus_num, device_address;
 		libusb_get_device_descriptor(devices[deviceIndex], &descriptor);
+		bus_num = libusb_get_bus_number(devices[deviceIndex]);
+		device_address = libusb_get_device_address(devices[deviceIndex]);
 
 		for (int i = 0; i < BridgeManager::kSupportedDeviceCount; i++)
 		{
 			if (descriptor.idVendor == supportedDevices[i].vendorId && descriptor.idProduct == supportedDevices[i].productId)
 			{
-				heimdallDevice = devices[deviceIndex];
-				libusb_ref_device(heimdallDevice);
-				break;
+				if (this->usbbus == -1 || this->usbdevaddr == -1 || (this->usbbus == bus_num && this->usbdevaddr == device_address))
+				{
+					heimdallDevice = devices[deviceIndex];
+					libusb_ref_device(heimdallDevice);
+					break;
+				}
 			}
 		}
 
@@ -344,6 +360,8 @@ bool BridgeManager::InitialiseProtocol(void)
 BridgeManager::BridgeManager(bool verbose)
 {
 	this->verbose = verbose;
+	this->usbbus = -1;
+	this->usbdevaddr = -1;
 
 	libusbContext = nullptr;
 	deviceHandle = nullptr;

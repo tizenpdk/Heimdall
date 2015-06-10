@@ -43,10 +43,12 @@ Arguments:\n\
     [--<partition identifier> <filename> ...]\n\
     [--pit <filename>] [--verbose] [--no-reboot] [--resume] [--stdout-errors]\n\
     [--usb-log-level <none/error/warning/debug>]\n\
+    [--usbbus <usbbus>] [--usbdevaddr <usb-dev-address>]\n\
   or:\n\
     --repartition --pit <filename> [--<partition name> <filename> ...]\n\
     [--<partition identifier> <filename> ...] [--verbose] [--no-reboot]\n\
     [--resume] [--stdout-errors] [--usb-log-level <none/error/warning/debug>]\n\
+    [--usbbus <usbbus>] [--usbdevaddr <usb-dev-address>]\n\
 Description: Flashes one or more firmware files to your phone. Partition names\n\
     (or identifiers) can be obtained by executing the print-pit action.\n\
 Note: --no-reboot causes the device to remain in download mode after the action\n\
@@ -393,6 +395,8 @@ int FlashAction::Execute(int argc, char **argv)
 	argumentTypes["verbose"] = kArgumentTypeFlag;
 	argumentTypes["stdout-errors"] = kArgumentTypeFlag;
 	argumentTypes["usb-log-level"] = kArgumentTypeString;
+	argumentTypes["usbbus"] = kArgumentTypeString;
+	argumentTypes["usbdevaddr"] = kArgumentTypeString;
 
 	argumentTypes["pit"] = kArgumentTypeString;
 	shortArgumentAliases["pit"] = "pit";
@@ -497,6 +501,21 @@ int FlashAction::Execute(int argc, char **argv)
 
 	BridgeManager *bridgeManager = new BridgeManager(verbose);
 	bridgeManager->SetUsbLogLevel(usbLogLevel);
+
+	const StringArgument *usbBus = static_cast<const StringArgument *>(arguments.GetArgument("usbbus"));
+	const StringArgument *usbDevAddr = static_cast<const StringArgument *>(arguments.GetArgument("usbdevaddr"));
+
+	if (usbBus)
+	{
+		const string& usbBusString = usbBus->GetValue();
+		bridgeManager->SetUsbBus(stoi(usbBusString));
+	}
+
+	if (usbDevAddr)
+	{
+		const string& usbDevAddrString = usbDevAddr->GetValue();
+		bridgeManager->SetUsbDevAddr(stoi(usbDevAddrString));
+	}
 
 	if (bridgeManager->Initialise(resume) != BridgeManager::kInitialiseSucceeded || !bridgeManager->BeginSession())
 	{

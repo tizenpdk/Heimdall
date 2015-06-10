@@ -109,6 +109,8 @@ namespace Heimdall
 			static const DeviceIdentifier supportedDevices[kSupportedDeviceCount];
 
 			bool verbose;
+			int usbbus;
+			int usbdevaddr;
 
 			libusb_context *libusbContext;
 			libusb_device_handle *deviceHandle;
@@ -176,6 +178,9 @@ namespace Heimdall
 			{
 				return (verbose);
 			}
+
+			void SetUsbBus(int);
+			void SetUsbDevAddr(int);
 	};
 }
 
